@@ -3,11 +3,15 @@ package com.exemple.maroute.service.impl;
 import com.exemple.maroute.dto.ConducteurRequestDTO;
 import com.exemple.maroute.dto.ConducteurResponseDTO;
 import com.exemple.maroute.entity.Conducteur;
+import com.exemple.maroute.exception.BusinessException;
+import com.exemple.maroute.exception.ResourceNotFoundException;
 import com.exemple.maroute.mapper.ConducteurMapper;
 import com.exemple.maroute.repository.ConducteurRepository;
 import com.exemple.maroute.service.ConducteurService;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -15,6 +19,7 @@ import java.util.List;
 @Transactional
 public class ConducteurServiceImpl implements ConducteurService {
 
+    private static final Logger log = LoggerFactory.getLogger(ConducteurServiceImpl.class);
     private final ConducteurRepository conducteurRepository;
     private final ConducteurMapper conducteurMapper;
 
@@ -60,5 +65,25 @@ public class ConducteurServiceImpl implements ConducteurService {
                 .toList();
     }
 
+    @Override
+    public ConducteurResponseDTO modifierConducteur(Long id, ConducteurRequestDTO request) {
+        Conducteur conducteur = conducteurRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("conducteur introuvable avec l'id " + id));
+
+        String email = request.email().trim().toLowerCase();
+
+        if (conducteurRepository.existsByEmailIgnoreCaseAndIdNot(email, id)) {
+            log.warn("modification refusée : email déjà utilisé ({})", email);
+            throw new BusinessException("Cet email est déjà utilisé");
+        }
+        if (conducteurRepository.existsByNumeroPermisAndIdNot(request.numeroPermis(), id)) {
+            log.warn("modification refusée : permis déjà utilisé ({})", request.numeroPermis());
+            throw new BusinessException("Ce numéro de permis est déjà utilisé");
+        }
+
+        conducteurMapper.updateEntity(request, conducteur);
+        log.info("conducteur {} modifié", id);
+        return conducteurMapper.toResponseDTO(conducteur);
+    }
 
 }
