@@ -16,5 +16,5 @@ public interface ConducteurService {
 
     ConducteurResponseDTO modifierConducteur(Long id, ConducteurRequestDTO request);
 
-    void supprimerConducteur(Long id);
+    ConducteurResponseDTO rechercherParEmail(String email);
 }
