@@ -50,7 +50,7 @@ public class Vehicule {
     @Column(nullable = false)
     private Integer capacite;
 
-    @NotNull(message = "Le conducteur est obligatoire")
+    @NotNull(message = "le conducteur est obligatoire")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "conducteur_id", nullable = false)
     private Conducteur conducteur;
