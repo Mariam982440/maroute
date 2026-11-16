@@ -6,7 +6,7 @@ import com.exemple.maroute.entity.Conducteur;
 import com.exemple.maroute.mapper.ConducteurMapper;
 import com.exemple.maroute.repository.ConducteurRepository;
 import com.exemple.maroute.service.ConducteurService;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -38,5 +38,14 @@ public class ConducteurServiceImpl implements ConducteurService {
         return conducteurMapper.toResponseDTO(conducteurEnregistre);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public ConducteurResponseDTO trouverConducteurParId(Long id) {
+
+        Conducteur conducteur = conducteurRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("conducteur introuvable"));
+
+        return conducteurMapper.toResponseDTO(conducteur);
+    }
 
 }
