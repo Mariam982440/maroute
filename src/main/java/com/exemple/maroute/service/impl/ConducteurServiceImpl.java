@@ -9,6 +9,8 @@ import com.exemple.maroute.service.ConducteurService;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @Transactional
 public class ConducteurServiceImpl implements ConducteurService {
@@ -48,4 +50,13 @@ public class ConducteurServiceImpl implements ConducteurService {
         return conducteurMapper.toResponseDTO(conducteur);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<ConducteurResponseDTO> trouverTousLesConducteurs() {
+
+        return conducteurRepository.findAll()
+                .stream()
+                .map(conducteurMapper::toResponseDTO)
+                .toList();
+    }
 }
