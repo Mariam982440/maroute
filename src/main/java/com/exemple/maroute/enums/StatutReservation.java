@@ -1,4 +1,6 @@
 package com.exemple.maroute.enums;
 
-public class StatutReservation {
+public enum StatutReservation {
+    CONFIRMEE,
+    ANNULEE
 }
