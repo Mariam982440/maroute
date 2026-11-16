@@ -1,10 +1,22 @@
 package com.exemple.maroute.entity;
 
+
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(
-        name = "vehicules"
+        name = "vehicules",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_vehicule_immatriculation",
+                        columnNames = "immatriculation"
+                )
+        }
 )
 public class Vehicule {
 
@@ -12,15 +24,30 @@ public class Vehicule {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "la marque est obligatoire")
+    @Size(max = 100)
+    @Column(nullable = false, length = 100)
     private String marque;
 
+    @NotBlank(message = "le modèle est obligatoire")
+    @Size(max = 100)
+    @Column(nullable = false, length = 100)
     private String modele;
 
+    @NotBlank(message = "l'immatriculation est obligatoire")
+    @Size(max = 30)
+    @Column(nullable = false, length = 30)
     private String immatriculation;
 
+    @NotBlank(message = "la couleur est obligatoire")
+    @Size(max = 50)
+    @Column(nullable = false, length = 50)
     private String couleur;
 
-
+    @NotNull(message = "la capacité est obligatoire")
+    @Min(value = 1, message = "la capacité minimale est de 1 place")
+    @Max(value = 8, message = "la capacité maximale est de 8 places")
+    @Column(nullable = false)
     private Integer capacite;
 
 
@@ -34,7 +61,6 @@ public class Vehicule {
         this.immatriculation = immatriculation;
         this.couleur = couleur;
         this.capacite = capacite;
-
     }
 
     public Long getId() {
@@ -80,7 +106,6 @@ public class Vehicule {
     public void setCapacite(Integer capacite) {
         this.capacite = capacite;
     }
-
-
 }
+
 
