@@ -12,4 +12,6 @@ public interface ConducteurMapper {
     Conducteur toEntity(ConducteurRequestDTO dto);
 
     ConducteurResponseDTO toResponseDTO(Conducteur conducteur);
+
+    void updateEntity(ConducteurRequestDTO request, Conducteur conducteur);
 }
