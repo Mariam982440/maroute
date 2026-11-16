@@ -22,7 +22,21 @@ public class ConducteurServiceImpl implements ConducteurService {
         this.conducteurRepository = conducteurRepository;
         this.conducteurMapper = conducteurMapper;
     }
+    @Override
+    public ConducteurResponseDTO creerConducteur(ConducteurRequestDTO request){
+        if (conducteurRepository.existsByEmailIgnoreCase(request.email())) {
+            throw new RuntimeException("cet email est déjà utilisé");
+        }
+        if (conducteurRepository.existsByNumeroPermis(request.numeroPermis())) {
+            throw new RuntimeException("ce numéro de permis est déjà utilisé");
+        }
 
+        Conducteur conducteur = conducteurMapper.toEntity(request);
+
+        Conducteur conducteurEnregistre = conducteurRepository.save(conducteur);
+
+        return conducteurMapper.toResponseDTO(conducteurEnregistre);
+    }
 
 
 }
