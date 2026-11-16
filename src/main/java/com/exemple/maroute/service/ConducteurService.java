@@ -17,4 +17,7 @@ public interface ConducteurService {
     ConducteurResponseDTO modifierConducteur(Long id, ConducteurRequestDTO request);
 
     ConducteurResponseDTO rechercherParEmail(String email);
+
+    List<ConducteurResponseDTO> rechercherParNom(String nom);
+
 }

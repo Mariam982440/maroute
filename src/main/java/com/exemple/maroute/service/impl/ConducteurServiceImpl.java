@@ -76,8 +76,6 @@ public class ConducteurServiceImpl implements ConducteurService {
     }
 
 
-
-
     @Override
     public ConducteurResponseDTO modifierConducteur(Long id, ConducteurRequestDTO request) {
 
@@ -117,4 +115,16 @@ public class ConducteurServiceImpl implements ConducteurService {
 
         return conducteurMapper.toResponseDTO(conducteur);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ConducteurResponseDTO> rechercherParNom(String nom) {
+
+        return conducteurRepository
+                .findByNomContainingIgnoreCaseOrPrenomContainingIgnoreCase(nom, nom)
+                .stream()
+                .map(conducteurMapper::toResponseDTO)
+                .toList();
+    }
+
 }
