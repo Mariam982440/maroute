@@ -1,10 +1,6 @@
 package com.exemple.maroute.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,39 +25,23 @@ public class Conducteur {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "le nom est obligatoire")
-    @Size(max = 100)
     @Column(nullable = false, length = 100)
     private String nom;
 
-    @NotBlank(message = "le prénom est obligatoire")
-    @Size(max = 100)
     @Column(nullable = false, length = 100)
     private String prenom;
 
-    @NotBlank(message = "l'email est obligatoire")
-    @Email(message = "l'adresse email doit être valide")
     @Column(nullable = false, length = 150)
     private String email;
 
-    @NotBlank(message = "le téléphone est obligatoire")
-    @Size(max = 20)
     @Column(nullable = false, length = 20)
     private String telephone;
 
-    @NotBlank(message = "le numéro de permis est obligatoire")
-    @Size(max = 50)
     @Column(name = "numero_permis", nullable = false, length = 50)
     private String numeroPermis;
 
-
-    @OneToMany(
-            mappedBy = "conducteur",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true
-    )
+    @OneToMany(mappedBy = "conducteur")
     private List<Vehicule> vehicules = new ArrayList<>();
-
 
     public Conducteur() {
     }
@@ -126,10 +106,5 @@ public class Conducteur {
     public void ajouterVehicule(Vehicule vehicule) {
         vehicules.add(vehicule);
         vehicule.setConducteur(this);
-    }
-
-    public void retirerVehicule(Vehicule vehicule) {
-        vehicules.remove(vehicule);
-        vehicule.setConducteur(null);
     }
 }
