@@ -10,3 +10,10 @@ spring:
     properties:
       hibernate:
         format_sql: true
+
+  logging:
+    level:
+      root: INFO
+      com.exemple.maroute: DEBUG
+    file:
+      name: logs/maroute.log
