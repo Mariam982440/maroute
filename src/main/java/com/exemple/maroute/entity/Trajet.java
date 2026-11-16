@@ -3,6 +3,7 @@ package com.exemple.maroute.entity;
 
 import com.exemple.maroute.enums.StatutTrajet;
 
+
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -46,7 +47,7 @@ public class Trajet {
     private LocalDateTime dateDepart;
 
     @NotNull(message = "le nombre de places proposées est obligatoire")
-    @Min(value = 1, message = "Il faut proposer au moins une place")
+    @Min(value = 1, message = "il faut proposer au moins une place")
     @Column(name = "places_proposees", nullable = false)
     private Integer placesProposees;
 
@@ -54,6 +55,13 @@ public class Trajet {
     @Column(nullable = false, length = 20)
     private StatutTrajet statut = StatutTrajet.PUBLIE;
 
+    @OneToMany(
+            mappedBy = "trajet",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    @OrderBy("ordre ASC")
+    private List<PointArret> pointsArret = new ArrayList<>();
 
     public Trajet() {
     }
@@ -129,4 +137,17 @@ public class Trajet {
     public void setStatut(StatutTrajet statut) {
         this.statut = statut;
     }
+
+    public List<PointArret> getPointsArret() {
+        return pointsArret;
+    }
+
+    public void setPointsArret(List<PointArret> pointsArret) {
+        this.pointsArret = pointsArret;
+    }
+
+//    public void ajouterPointArret(PointArret pointArret) {
+//        pointsArret.add(pointArret);
+//        pointArret.setTrajet(this);
+//    }
 }
