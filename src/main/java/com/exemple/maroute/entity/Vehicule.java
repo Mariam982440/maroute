@@ -50,17 +50,22 @@ public class Vehicule {
     @Column(nullable = false)
     private Integer capacite;
 
+    @NotNull(message = "Le conducteur est obligatoire")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "conducteur_id", nullable = false)
+    private Conducteur conducteur;
 
     public Vehicule() {
     }
 
     public Vehicule(String marque, String modele, String immatriculation,
-                    String couleur, Integer capacite) {
+                    String couleur, Integer capacite, Conducteur conducteur) {
         this.marque = marque;
         this.modele = modele;
         this.immatriculation = immatriculation;
         this.couleur = couleur;
         this.capacite = capacite;
+        this.conducteur = conducteur;
     }
 
     public Long getId() {
@@ -105,6 +110,14 @@ public class Vehicule {
 
     public void setCapacite(Integer capacite) {
         this.capacite = capacite;
+    }
+
+    public Conducteur getConducteur() {
+        return conducteur;
+    }
+
+    public void setConducteur(Conducteur conducteur) {
+        this.conducteur = conducteur;
     }
 }
 
