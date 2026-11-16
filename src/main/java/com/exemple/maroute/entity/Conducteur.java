@@ -3,8 +3,8 @@ package com.exemple.maroute.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-
 
 @Entity
 @Table(
@@ -20,9 +20,6 @@ import jakarta.validation.constraints.Size;
                 )
         }
 )
-
-
-
 public class Conducteur {
 
     @Id
@@ -54,13 +51,11 @@ public class Conducteur {
     @Column(name = "numero_permis", nullable = false, length = 50)
     private String numeroPermis;
 
-
-
-    public Conducteur(){
-
+    public Conducteur() {
     }
 
-    public Conducteur(String nom, String prenom, String email, String telephone, String numeroPermis) {
+    public Conducteur(String nom, String prenom, String email,
+                      String telephone, String numeroPermis) {
         this.nom = nom;
         this.prenom = prenom;
         this.email = email;
