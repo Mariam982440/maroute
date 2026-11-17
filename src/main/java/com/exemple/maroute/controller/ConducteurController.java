@@ -38,5 +38,11 @@ public class ConducteurController {
         return ResponseEntity.ok(conducteurService.trouverConducteurParId(id));
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<ConducteurResponseDTO> modifier(@PathVariable Long id,
+                                                          @Valid @RequestBody ConducteurRequestDTO requestDTO) {
+        return ResponseEntity.ok(conducteurService.modifierConducteur(id,requestDTO));
+    }
+
 
 }
