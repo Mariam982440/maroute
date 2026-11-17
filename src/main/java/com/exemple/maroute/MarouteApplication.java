@@ -9,5 +9,4 @@ public class MarouteApplication {
     public static void main(String[] args) {
         SpringApplication.run(MarouteApplication.class, args);
     }
-
 }

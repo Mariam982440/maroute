@@ -2,14 +2,14 @@ package com.exemple.maroute.controller;
 
 import com.exemple.maroute.dto.ConducteurRequestDTO;
 import com.exemple.maroute.dto.ConducteurResponseDTO;
+import com.exemple.maroute.entity.Conducteur;
 import com.exemple.maroute.service.ConducteurService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/conducteurs")
@@ -27,4 +27,12 @@ public class ConducteurController {
         ConducteurResponseDTO cree = conducteurService.creerConducteur(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(cree);
     }
+
+    @GetMapping
+    public ResponseEntity<List<ConducteurResponseDTO>> lister(){
+        return ResponseEntity.ok(conducteurService.trouverTousLesConducteurs());
+    }
+
+
+
 }
