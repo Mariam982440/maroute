@@ -33,6 +33,10 @@ public class ConducteurController {
         return ResponseEntity.ok(conducteurService.trouverTousLesConducteurs());
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<ConducteurResponseDTO> consulter(@PathVariable Long id){
+        return ResponseEntity.ok(conducteurService.trouverConducteurParId(id));
+    }
 
 
 }
