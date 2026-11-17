@@ -44,12 +44,12 @@ public class ConducteurController {
         return ResponseEntity.ok(conducteurService.modifierConducteur(id,requestDTO));
     }
 
-    @GetMapping(value = "/recherche",params = "email")
+    @GetMapping(value = "/recherche/email",params = "email")
     public ResponseEntity<ConducteurResponseDTO> rechercherParEmail(@RequestParam String email){
         return ResponseEntity.ok(conducteurService.rechercherParEmail(email));
     }
 
-    @GetMapping(value = "/recherche",params = "nom")
+    @GetMapping(value = "/recherche/nom",params = "nom")
     public ResponseEntity<List<ConducteurResponseDTO>>  rechercherParNom(@RequestParam String nom){
         return ResponseEntity.ok(conducteurService.rechercherParNom(nom));
     }
