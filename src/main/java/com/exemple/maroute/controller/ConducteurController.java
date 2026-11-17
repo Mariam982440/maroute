@@ -49,6 +49,10 @@ public class ConducteurController {
         return ResponseEntity.ok(conducteurService.rechercherParEmail(email));
     }
 
+    @GetMapping(value = "/recherche",params = "nom")
+    public ResponseEntity<List<ConducteurResponseDTO>>  rechercherParNom(@RequestParam String nom){
+        return ResponseEntity.ok(conducteurService.rechercherParNom(nom));
+    }
 
 
 }
