@@ -14,5 +14,4 @@ public interface VehiculeService {
     VehiculeResponseDTO trouverVehiculeParId(Long id);
 
     List<VehiculeResponseDTO> trouverVehiculesParConducteur(Long conducteurId);
-
 }
