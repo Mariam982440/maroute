@@ -7,6 +7,7 @@ import com.exemple.maroute.dto.VehiculeRequestDTO;
 import com.exemple.maroute.dto.VehiculeResponseDTO;
 import com.exemple.maroute.entity.Passager;
 import com.exemple.maroute.exception.BusinessException;
+import com.exemple.maroute.exception.ResourceNotFoundException;
 import com.exemple.maroute.mapper.PassagerMapper;
 import com.exemple.maroute.repository.PassagerRepository;
 import com.exemple.maroute.service.PassagerService;
@@ -51,4 +52,16 @@ public class PassagerServiceImpl implements PassagerService {
     private String normaliserEmail(String email) {
         return email.trim().toLowerCase();
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PassagerResponseDTO trouverPassagerParId(Long id) {
+
+        Passager passager = passagerRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "passager introuvable avec l'id " + id));
+
+        return passagerMapper.toResponseDTO(passager);
+    }
+
 }
