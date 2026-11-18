@@ -1,14 +1,7 @@
 package com.exemple.maroute.entity;
 
-
 import com.exemple.maroute.enums.StatutTrajet;
-
-
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -22,60 +15,36 @@ public class Trajet {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotNull(message = "le conducteur est obligatoire")
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "conducteur_id", nullable = false)
     private Conducteur conducteur;
 
-    @NotNull(message = "le véhicule est obligatoire")
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "vehicule_id", nullable = false)
     private Vehicule vehicule;
 
-    @NotBlank(message = "la ville de départ est obligatoire")
-    @Size(max = 100)
     @Column(name = "ville_depart", nullable = false, length = 100)
     private String villeDepart;
 
-    @NotBlank(message = "la ville d'arrivée est obligatoire")
-    @Size(max = 100)
     @Column(name = "ville_arrivee", nullable = false, length = 100)
     private String villeArrivee;
 
-    @NotNull(message = "la date de départ est obligatoire")
     @Column(name = "date_depart", nullable = false)
     private LocalDateTime dateDepart;
 
-    @NotNull(message = "le nombre de places proposées est obligatoire")
-    @Min(value = 1, message = "il faut proposer au moins une place")
     @Column(name = "places_proposees", nullable = false)
-    private Integer placesProposees;
+    private int placesProposees;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private StatutTrajet statut = StatutTrajet.PUBLIE;
+    private StatutTrajet statut;
 
-    @OneToMany(
-            mappedBy = "trajet",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true
-    )
+    // composition : les points d'arrêt n'existent pas sans leur trajet
+    @OneToMany(mappedBy = "trajet", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("ordre ASC")
     private List<PointArret> pointsArret = new ArrayList<>();
 
     public Trajet() {
-    }
-
-    public Trajet(Conducteur conducteur, Vehicule vehicule,
-                  String villeDepart, String villeArrivee,
-                  LocalDateTime dateDepart, Integer placesProposees) {
-        this.conducteur = conducteur;
-        this.vehicule = vehicule;
-        this.villeDepart = villeDepart;
-        this.villeArrivee = villeArrivee;
-        this.dateDepart = dateDepart;
-        this.placesProposees = placesProposees;
-        this.statut = StatutTrajet.PUBLIE;
     }
 
     public Long getId() {
@@ -122,11 +91,11 @@ public class Trajet {
         this.dateDepart = dateDepart;
     }
 
-    public Integer getPlacesProposees() {
+    public int getPlacesProposees() {
         return placesProposees;
     }
 
-    public void setPlacesProposees(Integer placesProposees) {
+    public void setPlacesProposees(int placesProposees) {
         this.placesProposees = placesProposees;
     }
 
@@ -142,12 +111,8 @@ public class Trajet {
         return pointsArret;
     }
 
-    public void setPointsArret(List<PointArret> pointsArret) {
-        this.pointsArret = pointsArret;
+    public void ajouterPointArret(PointArret pointArret) {
+        pointsArret.add(pointArret);
+        pointArret.setTrajet(this);
     }
-
-//    public void ajouterPointArret(PointArret pointArret) {
-//        pointsArret.add(pointArret);
-//        pointArret.setTrajet(this);
-//    }
 }
