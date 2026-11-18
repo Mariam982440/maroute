@@ -87,7 +87,29 @@ public class PassagerServiceImpl implements PassagerService {
                         "aucun passager avec l'email " + email));
 
         return passagerMapper.toResponseDTO(passager);
-
     }
+
+    @Override
+    public PassagerResponseDTO modifierPassager(Long id, PassagerRequestDTO request) {
+
+        Passager passager = passagerRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "passager introuvable avec l'id " + id));
+
+        String email = normaliserEmail(request.email());
+
+        if (passagerRepository.existsByEmailIgnoreCaseAndIdNot(email, id)) {
+            log.warn("modification refusée : email déjà utilisé ({})", email);
+            throw new BusinessException("cet email est déjà utilisé");
+        }
+
+        passagerMapper.updateEntity(request, passager);
+        passager.setEmail(email);
+
+        log.info("passager {} modifié", id);
+        return passagerMapper.toResponseDTO(passager);
+    }
+
+
 
 }
