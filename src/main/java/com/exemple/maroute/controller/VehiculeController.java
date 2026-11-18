@@ -38,6 +38,10 @@ public class VehiculeController {
         return ResponseEntity.ok(vehiculeService.modifierVehicule(id, request));
     }
 
+    @GetMapping("/vehicules/{id}")
+    public ResponseEntity<VehiculeResponseDTO> consulter(@PathVariable Long id) {
+        return ResponseEntity.ok(vehiculeService.trouverVehiculeParId(id));
+    }
 
     @GetMapping("/conducteurs/{conducteurId}/vehicules")
     public ResponseEntity<List<VehiculeResponseDTO>> listerParConducteur(@PathVariable Long id){
