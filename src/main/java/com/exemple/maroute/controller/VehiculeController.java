@@ -24,9 +24,20 @@ public class VehiculeController {
 
 
     @PostMapping("vehicules")
-    public ResponseEntity<VehiculeResponseDTO> ajouter( @Valid @RequestParam VehiculeRequestDTO request){
+    public ResponseEntity<VehiculeResponseDTO> ajouter(
+            @Valid @RequestBody VehiculeRequestDTO request){
         VehiculeResponseDTO cree = vehiculeService.ajouterVehicule(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(cree);    }
+        return ResponseEntity.status(HttpStatus.CREATED).body(cree);
+    }
+
+
+    @PutMapping("/vehicules/{id}")
+    public ResponseEntity<VehiculeResponseDTO> modifier(
+            @PathVariable Long id,
+            @Valid @RequestBody VehiculeRequestDTO request) {
+        return ResponseEntity.ok(vehiculeService.modifierVehicule(id, request));
+    }
+
 
     @GetMapping("/conducteurs/{conducteurId}/vehicules")
     public ResponseEntity<List<VehiculeResponseDTO>> listerParConducteur(@PathVariable Long id){
