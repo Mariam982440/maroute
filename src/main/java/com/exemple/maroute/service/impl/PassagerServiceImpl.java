@@ -15,6 +15,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
+
 @Service
 @Transactional
 public class PassagerServiceImpl implements PassagerService {
@@ -62,6 +65,16 @@ public class PassagerServiceImpl implements PassagerService {
                         "passager introuvable avec l'id " + id));
 
         return passagerMapper.toResponseDTO(passager);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PassagerResponseDTO> trouverTousLesPassagers() {
+
+        return passagerRepository.findAll()
+                .stream()
+                .map(passagerMapper::toResponseDTO)
+                .toList();
     }
 
 }
