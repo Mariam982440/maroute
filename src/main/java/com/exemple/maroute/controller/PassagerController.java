@@ -24,6 +24,12 @@ public class PassagerController {
         this.passagerService = passagerService;
     }
 
+    @PostMapping
+    public ResponseEntity<PassagerResponseDTO> creer(
+            @Valid @RequestBody PassagerRequestDTO request) {
+        PassagerResponseDTO cree = passagerService.creerPassager(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(cree);
+    }
 
 
 
