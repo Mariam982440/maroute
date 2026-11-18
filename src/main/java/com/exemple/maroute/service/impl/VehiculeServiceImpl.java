@@ -11,10 +11,6 @@ import com.exemple.maroute.mapper.VehiculeMapper;
 import com.exemple.maroute.repository.ConducteurRepository;
 import com.exemple.maroute.repository.VehiculeRepository;
 import com.exemple.maroute.service.VehiculeService;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -22,12 +18,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-
 @Service
 @Transactional
 public class VehiculeServiceImpl implements VehiculeService {
 
-    private static final Logger log = LoggerFactory.getLogger(VehiculeRepository.class);
+    private static final Logger log = LoggerFactory.getLogger(VehiculeServiceImpl.class);
+
     private final VehiculeRepository vehiculeRepository;
     private final ConducteurRepository conducteurRepository;
     private final VehiculeMapper vehiculeMapper;
@@ -48,7 +44,7 @@ public class VehiculeServiceImpl implements VehiculeService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "conducteur introuvable avec l'id " + request.conducteurId()));
 
-        String immatriculation = request.immatriculation();
+        String immatriculation = normaliserImmatriculation(request.immatriculation());
 
         if (vehiculeRepository.existsByImmatriculationIgnoreCase(immatriculation)) {
             log.warn("ajout refusé : immatriculation déjà utilisée ({})", immatriculation);
@@ -56,6 +52,7 @@ public class VehiculeServiceImpl implements VehiculeService {
         }
 
         Vehicule vehicule = vehiculeMapper.toEntity(request);
+        vehicule.setImmatriculation(immatriculation);
         vehicule.setConducteur(conducteur);
 
         Vehicule vehiculeEnregistre = vehiculeRepository.save(vehicule);
@@ -66,23 +63,27 @@ public class VehiculeServiceImpl implements VehiculeService {
     }
 
     @Override
-    public VehiculeResponseDTO modifierVehicule (Long id, VehiculeRequestDTO request){
+    public VehiculeResponseDTO modifierVehicule(Long id, VehiculeRequestDTO request) {
 
         Vehicule vehicule = vehiculeRepository.findById(id)
-                .orElseThrow(()->new ResourceNotFoundException("véhicule introuvable avec l'id "+ id));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "véhicule introuvable avec l'id " + id));
 
-        if(!vehicule.getConducteur().getId().equals(request.conducteurId())){
+        if (!vehicule.getConducteur().getId().equals(request.conducteurId())) {
             log.warn("modification refusée : le conducteur {} n'est pas propriétaire du véhicule {}",
-                request.conducteurId(), id);
+                    request.conducteurId(), id);
             throw new ForbiddenException("ce véhicule appartient à un autre conducteur");
         }
-        String immatriculation = request.immatriculation();
 
-        if(vehiculeRepository.existsByImmatriculationIgnoreCaseAndIdNot(immatriculation,id)){
+        String immatriculation = normaliserImmatriculation(request.immatriculation());
+
+        if (vehiculeRepository.existsByImmatriculationIgnoreCaseAndIdNot(immatriculation, id)) {
             log.warn("modification refusée : immatriculation déjà utilisée ({})", immatriculation);
             throw new BusinessException("cette immatriculation est déjà utilisée");
         }
-        vehiculeMapper.updateEntity(request,vehicule);
+
+        vehiculeMapper.updateEntity(request, vehicule);
+        vehicule.setImmatriculation(immatriculation);
 
         log.info("véhicule {} modifié", id);
         return vehiculeMapper.toResponseDTO(vehicule);
@@ -90,10 +91,11 @@ public class VehiculeServiceImpl implements VehiculeService {
 
     @Override
     @Transactional(readOnly = true)
-    public VehiculeResponseDTO trouverVehiculeParId(Long id){
+    public VehiculeResponseDTO trouverVehiculeParId(Long id) {
+
         Vehicule vehicule = vehiculeRepository.findById(id)
-                .orElseThrow(()->
-                        new ResourceNotFoundException("véhicule introuvable avec l'id " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "véhicule introuvable avec l'id " + id));
 
         return vehiculeMapper.toResponseDTO(vehicule);
     }
@@ -113,5 +115,7 @@ public class VehiculeServiceImpl implements VehiculeService {
                 .toList();
     }
 
-
+    private String normaliserImmatriculation(String immatriculation) {
+        return immatriculation.trim().toUpperCase();
+    }
 }
