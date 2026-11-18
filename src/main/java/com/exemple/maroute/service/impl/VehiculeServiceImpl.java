@@ -20,6 +20,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 
 @Service
 @Transactional
@@ -96,6 +98,20 @@ public class VehiculeServiceImpl implements VehiculeService {
         return vehiculeMapper.toResponseDTO(vehicule);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<VehiculeResponseDTO> trouverVehiculesParConducteur(Long conducteurId) {
+
+        if (!conducteurRepository.existsById(conducteurId)) {
+            throw new ResourceNotFoundException(
+                    "conducteur introuvable avec l'id " + conducteurId);
+        }
+
+        return vehiculeRepository.findByConducteurId(conducteurId)
+                .stream()
+                .map(vehiculeMapper::toResponseDTO)
+                .toList();
+    }
 
 
 }
