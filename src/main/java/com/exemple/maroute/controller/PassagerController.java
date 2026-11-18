@@ -32,6 +32,10 @@ public class PassagerController {
     public ResponseEntity<List<PassagerResponseDTO>> lister() {
         return ResponseEntity.ok(passagerService.trouverTousLesPassagers());
     }
+    @GetMapping("/{id}")
+    public ResponseEntity<PassagerResponseDTO> consulter(@PathVariable Long id) {
+        return ResponseEntity.ok(passagerService.trouverPassagerParId(id));
+    }
 
 
 }
