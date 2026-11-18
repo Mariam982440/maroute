@@ -1,8 +1,12 @@
 package com.exemple.maroute.service.impl;
 
 
+import com.exemple.maroute.dto.PassagerRequestDTO;
+import com.exemple.maroute.dto.PassagerResponseDTO;
 import com.exemple.maroute.dto.VehiculeRequestDTO;
 import com.exemple.maroute.dto.VehiculeResponseDTO;
+import com.exemple.maroute.entity.Passager;
+import com.exemple.maroute.exception.BusinessException;
 import com.exemple.maroute.mapper.PassagerMapper;
 import com.exemple.maroute.repository.PassagerRepository;
 import com.exemple.maroute.service.PassagerService;
@@ -25,6 +29,25 @@ public class PassagerServiceImpl implements PassagerService {
         this.passagerRepository = passagerRepository;
         this.passagerMapper = passagerMapper;
     }
+    @Override
+    public PassagerResponseDTO crerPassager(PassagerRequestDTO request){
+
+        String email = normaliserEmail(request.email());
+
+        if (passagerRepository.existsByEmailIgnoreCase(email)) {
+            log.warn("création refusée : email déjà utilisé ({})", email);
+            throw new BusinessException("cet email est déjà utilisé");
+        }
+
+        Passager passager = passagerMapper.toEntity(request);
+        passager.setEmail(email);
+
+        Passager passagerEnregistre = passagerRepository.save(passager);
+        log.info("passager créé avec l'id {}", passagerEnregistre.getId());
+
+        return passagerMapper.toResponseDTO(passagerEnregistre);
+    }
+
     private String normaliserEmail(String email) {
         return email.trim().toLowerCase();
     }
