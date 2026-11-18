@@ -77,4 +77,16 @@ public class PassagerServiceImpl implements PassagerService {
                 .toList();
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public PassagerResponseDTO rechercherParEmail(String email) {
+
+        Passager passager = passagerRepository
+                .findByEmailIgnoreCase(normaliserEmail(email))
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "aucun passager avec l'email " + email));
+
+        return passagerMapper.toResponseDTO(passager);
+    }
+
 }
