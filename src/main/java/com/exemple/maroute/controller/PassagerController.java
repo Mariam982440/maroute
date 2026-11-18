@@ -37,5 +37,12 @@ public class PassagerController {
         return ResponseEntity.ok(passagerService.trouverPassagerParId(id));
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<PassagerResponseDTO> modifier(
+            @PathVariable Long id,
+            @Valid @RequestBody PassagerRequestDTO request) {
+        return ResponseEntity.ok(passagerService.modifierPassager(id, request));
+    }
+
 
 }
