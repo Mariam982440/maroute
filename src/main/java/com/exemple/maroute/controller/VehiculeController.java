@@ -39,13 +39,15 @@ public class VehiculeController {
     }
 
     @GetMapping("/vehicules/{id}")
-    public ResponseEntity<VehiculeResponseDTO> consulter(@PathVariable Long id) {
+    public ResponseEntity<VehiculeResponseDTO> consulter(
+            @PathVariable Long id) {
         return ResponseEntity.ok(vehiculeService.trouverVehiculeParId(id));
     }
 
     @GetMapping("/conducteurs/{conducteurId}/vehicules")
-    public ResponseEntity<List<VehiculeResponseDTO>> listerParConducteur(@PathVariable Long id){
-        return ResponseEntity.ok(vehiculeService.trouverVehiculesParConducteur(id));
+    public ResponseEntity<List<VehiculeResponseDTO>> listerParConducteur(
+            @PathVariable Long conducteurId) {
+        return ResponseEntity.ok(vehiculeService.trouverVehiculesParConducteur(conducteurId));
     }
 
 

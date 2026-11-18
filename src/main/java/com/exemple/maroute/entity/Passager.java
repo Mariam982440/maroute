@@ -1,10 +1,6 @@
 package com.exemple.maroute.entity;
 
-
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(
@@ -22,23 +18,15 @@ public class Passager {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "le nom est obligatoire")
-    @Size(max = 100)
     @Column(nullable = false, length = 100)
     private String nom;
 
-    @NotBlank(message = "le prénom est obligatoire")
-    @Size(max = 100)
     @Column(nullable = false, length = 100)
     private String prenom;
 
-    @NotBlank(message = "l'email est obligatoire")
-    @Email(message = "l'adresse email doit être valide")
     @Column(nullable = false, length = 150)
     private String email;
 
-    @NotBlank(message = "le téléphone est obligatoire")
-    @Size(max = 20)
     @Column(nullable = false, length = 20)
     private String telephone;
 
@@ -88,4 +76,3 @@ public class Passager {
         this.telephone = telephone;
     }
 }
-
