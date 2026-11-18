@@ -54,6 +54,13 @@ public class GlobalExceptionHandler {
                 "Le paramètre '" + ex.getName() + "' a une valeur invalide", request);
     }
 
+    // 400 : donnée invalide détectée dans le service (parcours, places, montée/descente...)
+    @ExceptionHandler(InvalidRequestException.class)
+    public ProblemDetail handleInvalidRequest(InvalidRequestException ex,
+                                              HttpServletRequest request) {
+        return build(HttpStatus.BAD_REQUEST, "Requête invalide", ex.getMessage(), request);
+    }
+
     // 403
     @ExceptionHandler(ForbiddenException.class)
     public ProblemDetail handleForbidden(ForbiddenException ex, HttpServletRequest request) {
