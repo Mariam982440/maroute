@@ -34,7 +34,7 @@ public class PassagerServiceImpl implements PassagerService {
         this.passagerMapper = passagerMapper;
     }
     @Override
-    public PassagerResponseDTO crerPassager(PassagerRequestDTO request){
+    public PassagerResponseDTO creerPassager(PassagerRequestDTO request){
 
         String email = normaliserEmail(request.email());
 

@@ -44,5 +44,11 @@ public class PassagerController {
         return ResponseEntity.ok(passagerService.modifierPassager(id, request));
     }
 
+    @GetMapping("/recherche")
+    public ResponseEntity<PassagerResponseDTO> rechercherParEmail(
+            @RequestParam String email) {
+        return ResponseEntity.ok(passagerService.rechercherParEmail(email));
+    }
+
 
 }

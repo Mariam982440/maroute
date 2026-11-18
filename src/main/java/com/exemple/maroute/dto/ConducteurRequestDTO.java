@@ -15,7 +15,8 @@ public record ConducteurRequestDTO(
         String prenom,
 
         @NotBlank(message = "l'email est obligatoire")
-        @Email(message = "l'adresse email doit être valide")
+        @Email(regexp = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$",
+                message = "L'adresse email doit être valide")
         @Size(max = 150, message = "l'email ne doit pas dépasser 150 caractères")
         String email,
 
