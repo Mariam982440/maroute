@@ -7,6 +7,7 @@ import com.exemple.maroute.dto.TrajetResponseDTO;
 import com.exemple.maroute.entity.Conducteur;
 import com.exemple.maroute.entity.Vehicule;
 import com.exemple.maroute.exception.ForbiddenException;
+import com.exemple.maroute.exception.InvalidRequestException;
 import com.exemple.maroute.exception.ResourceNotFoundException;
 import com.exemple.maroute.mapper.TrajetMapper;
 import com.exemple.maroute.repository.ConducteurRepository;
@@ -18,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -65,6 +67,14 @@ public class TrajetServiceImpl implements TrajetService {
 
         List<PointArretRequestDTO> points = request.pointsArret();
 
+    }
+
+    private void verifierParcours(List<PointArretRequestDTO> points){
+        if ()
+    }
+    private InvalidRequestException refus(String message){
+        log.warn("publication refusée: {}",message);
+        throw new InvalidRequestException(message);
     }
 
 }
