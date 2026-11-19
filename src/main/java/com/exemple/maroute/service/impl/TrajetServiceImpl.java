@@ -19,8 +19,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @Transactional
@@ -70,8 +73,36 @@ public class TrajetServiceImpl implements TrajetService {
     }
 
     private void verifierParcours(List<PointArretRequestDTO> points){
-        if ()
+
+        if (!points.get(0).heurePassage().isAfter(LocalDateTime.now())){
+            throw  refus("l'heure de départ doit être dans le futur");
+        }
+
+        if (points.get(0).prixDepuisDepart().compareTo(BigDecimal.ZERO) != 0){
+            throw refus("le prix du point de départ doit être égal à 0");
+        }
+
+        Set<String> villes = new HashSet<>();
+        for (int i = 0; i < points.size(); i++) {
+            PointArretRequestDTO point = points.get(i);
+
+            if (!villes.add(point.ville().trim().toLowerCase())) {
+                throw refus("la ville " + point.ville().trim() + " apparaît plusieurs fois sur le parcours");
+            }
+
+            if (i > 0) {
+                PointArretRequestDTO precedent = points.get(i - 1);
+                if (!point.heurePassage().isAfter(precedent.heurePassage())) {
+                    throw refus("les heures de passage doivent être strictement croissantes");
+                }
+                if (point.prixDepuisDepart().compareTo(precedent.prixDepuisDepart()) <= 0) {
+                    throw refus("les prix depuis le départ doivent être strictement croissants");
+                }
+            }
+        }
+
     }
+
     private InvalidRequestException refus(String message){
         log.warn("publication refusée: {}",message);
         throw new InvalidRequestException(message);
