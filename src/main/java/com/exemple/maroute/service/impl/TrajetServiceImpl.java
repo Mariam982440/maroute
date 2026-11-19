@@ -5,6 +5,7 @@ import com.exemple.maroute.dto.PointArretRequestDTO;
 import com.exemple.maroute.dto.TrajetRequestDTO;
 import com.exemple.maroute.dto.TrajetResponseDTO;
 import com.exemple.maroute.entity.Conducteur;
+import com.exemple.maroute.entity.Trajet;
 import com.exemple.maroute.entity.Vehicule;
 import com.exemple.maroute.exception.ForbiddenException;
 import com.exemple.maroute.exception.InvalidRequestException;
@@ -101,6 +102,10 @@ public class TrajetServiceImpl implements TrajetService {
             }
         }
 
+    }
+
+    private int calculerPlacesRestantes(Trajet trajet) {
+        return trajet.getPlacesProposees();
     }
 
     private InvalidRequestException refus(String message){
