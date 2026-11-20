@@ -5,9 +5,9 @@ import com.exemple.maroute.dto.ReservationResponseDTO;
 import com.exemple.maroute.entity.Passager;
 import com.exemple.maroute.entity.PointArret;
 import com.exemple.maroute.entity.Reservation;
-import com.exemple.maroute.entity.Trajet;
 import com.exemple.maroute.enums.StatutReservation;
 import com.exemple.maroute.enums.StatutTrajet;
+import com.exemple.maroute.entity.Trajet;
 import com.exemple.maroute.exception.BusinessException;
 import com.exemple.maroute.exception.ForbiddenException;
 import com.exemple.maroute.exception.InvalidRequestException;
@@ -17,15 +17,15 @@ import com.exemple.maroute.repository.PassagerRepository;
 import com.exemple.maroute.repository.ReservationRepository;
 import com.exemple.maroute.repository.TrajetRepository;
 import com.exemple.maroute.service.ReservationService;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
-import java.util.logging.Logger;
+import java.util.List;
 
 @Service
 @Transactional
@@ -62,7 +62,6 @@ public class ReservationServiceImpl implements ReservationService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "trajet introuvable avec l'id " + request.trajetId()));
 
-
         PointArret montee = trouverPoint(trajet, request.pointMonteeId(), "montée");
         PointArret descente = trouverPoint(trajet, request.pointDescenteId(), "descente");
 
@@ -88,7 +87,6 @@ public class ReservationServiceImpl implements ReservationService {
             throw conflit("il ne reste que " + placesRestantes + " place(s) sur ce trajet");
         }
 
-
         BigDecimal prixPlace = descente.getPrixDepuisDepart().subtract(montee.getPrixDepuisDepart());
         BigDecimal montantTotal = prixPlace
                 .multiply(BigDecimal.valueOf(request.nombrePlaces()))
@@ -113,8 +111,6 @@ public class ReservationServiceImpl implements ReservationService {
         return reservationMapper.toResponseDTO(enregistree);
     }
 
-
-
     @Override
     public void annulerReservation(Long reservationId, Long passagerId) {
 
@@ -136,7 +132,6 @@ public class ReservationServiceImpl implements ReservationService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "trajet introuvable avec l'id " + reservation.getTrajet().getId()));
 
-        // annulation possible jusqu'à 24 h avant le départ
         LocalDateTime limite = trajet.getDateDepart().minusHours(DELAI_ANNULATION_HEURES);
         if (LocalDateTime.now().isAfter(limite)) {
             throw conflit("annulation impossible : le délai de " + DELAI_ANNULATION_HEURES
@@ -145,7 +140,6 @@ public class ReservationServiceImpl implements ReservationService {
 
         reservation.setStatut(StatutReservation.ANNULEE);
 
-        // une place vient de se libérer
         if (trajet.getStatut() == StatutTrajet.COMPLET) {
             trajet.setStatut(StatutTrajet.PUBLIE);
             log.info("trajet {} redevenu PUBLIE", trajet.getId());
@@ -154,6 +148,39 @@ public class ReservationServiceImpl implements ReservationService {
         log.info("réservation {} annulée par le passager {}", reservationId, passagerId);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<ReservationResponseDTO> consulterReservationsPassager(Long passagerId) {
+
+        if (!passagerRepository.existsById(passagerId)) {
+            throw new ResourceNotFoundException("passager introuvable avec l'id " + passagerId);
+        }
+
+        return reservationRepository.findHistoriqueByPassagerId(passagerId)
+                .stream()
+                .map(reservationMapper::toResponseDTO)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ReservationResponseDTO> consulterReservationsTrajet(Long trajetId, Long conducteurId) {
+
+        Trajet trajet = trajetRepository.findById(trajetId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "trajet introuvable avec l'id " + trajetId));
+
+        if (!trajet.getConducteur().getId().equals(conducteurId)) {
+            log.warn("consultation refusée : le trajet {} n'appartient pas au conducteur {}",
+                    trajetId, conducteurId);
+            throw new ForbiddenException("ce trajet appartient à un autre conducteur");
+        }
+
+        return reservationRepository.findByTrajetIdAvecPoints(trajetId)
+                .stream()
+                .map(reservationMapper::toResponseDTO)
+                .toList();
+    }
 
     private int calculerPlacesRestantes(Trajet trajet) {
         long reservees = reservationRepository.sommePlacesParTrajetEtStatut(
