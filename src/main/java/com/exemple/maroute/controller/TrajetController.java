@@ -27,4 +27,9 @@ public class TrajetController {
         return ResponseEntity.status(HttpStatus.CREATED).body(publie);
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<TrajetResponseDTO> consulter(@PathVariable Long id){
+        return ResponseEntity.ok(trajetService.consulterTrajet(id));
+    }
+
 }
