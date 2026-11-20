@@ -9,6 +9,7 @@ import com.exemple.maroute.entity.Trajet;
 import com.exemple.maroute.enums.StatutReservation;
 import com.exemple.maroute.enums.StatutTrajet;
 import com.exemple.maroute.exception.BusinessException;
+import com.exemple.maroute.exception.ForbiddenException;
 import com.exemple.maroute.exception.InvalidRequestException;
 import com.exemple.maroute.exception.ResourceNotFoundException;
 import com.exemple.maroute.mapper.ReservationMapper;
@@ -100,7 +101,6 @@ public class ReservationServiceImpl implements ReservationService {
 
         Reservation enregistree = reservationRepository.save(reservation);
 
-        // PUBLIE -> COMPLET quand il ne reste plus de place
         if (placesRestantes - request.nombrePlaces() == 0) {
             trajet.setStatut(StatutTrajet.COMPLET);
             log.info("trajet {} devenu COMPLET", trajet.getId());
@@ -113,6 +113,46 @@ public class ReservationServiceImpl implements ReservationService {
         return reservationMapper.toResponseDTO(enregistree);
     }
 
+
+
+    @Override
+    public void annulerReservation(Long reservationId, Long passagerId) {
+
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "réservation introuvable avec l'id " + reservationId));
+
+        if (!reservation.getPassager().getId().equals(passagerId)) {
+            log.warn("annulation refusée : la réservation {} n'appartient pas au passager {}",
+                    reservationId, passagerId);
+            throw new ForbiddenException("cette réservation appartient à un autre passager");
+        }
+
+        if (reservation.getStatut() != StatutReservation.CONFIRMEE) {
+            throw conflit("cette réservation est déjà annulée");
+        }
+
+        Trajet trajet = trajetRepository.findByIdForUpdate(reservation.getTrajet().getId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "trajet introuvable avec l'id " + reservation.getTrajet().getId()));
+
+        // annulation possible jusqu'à 24 h avant le départ
+        LocalDateTime limite = trajet.getDateDepart().minusHours(DELAI_ANNULATION_HEURES);
+        if (LocalDateTime.now().isAfter(limite)) {
+            throw conflit("annulation impossible : le délai de " + DELAI_ANNULATION_HEURES
+                    + " h avant le départ est dépassé");
+        }
+
+        reservation.setStatut(StatutReservation.ANNULEE);
+
+        // une place vient de se libérer
+        if (trajet.getStatut() == StatutTrajet.COMPLET) {
+            trajet.setStatut(StatutTrajet.PUBLIE);
+            log.info("trajet {} redevenu PUBLIE", trajet.getId());
+        }
+
+        log.info("réservation {} annulée par le passager {}", reservationId, passagerId);
+    }
 
 
     private int calculerPlacesRestantes(Trajet trajet) {
