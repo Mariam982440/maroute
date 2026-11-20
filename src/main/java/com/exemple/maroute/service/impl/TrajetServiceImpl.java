@@ -102,6 +102,15 @@ public class TrajetServiceImpl implements TrajetService {
         return trajetMapper.toResponseDTO(trajetEnregistre, calculerPlacesRestantes(trajetEnregistre));
     }
 
+    @Override
+    public TrajetResponseDTO consulterTrajet(Long idTrajet){
+
+        Trajet trajet = trajetRepository.findDetailById(idTrajet)
+                .orElseThrow(()->new ResourceNotFoundException("trajet introuvable avec l'id : "+idTrajet));
+
+        return trajetMapper.toResponseDTO(trajet,calculerPlacesRestantes(trajet));
+    }
+
     private void verifierParcours(List<PointArretRequestDTO> points){
 
         if (!points.get(0).heurePassage().isAfter(LocalDateTime.now())){
