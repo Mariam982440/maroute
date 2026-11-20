@@ -5,8 +5,10 @@ import com.exemple.maroute.dto.PointArretRequestDTO;
 import com.exemple.maroute.dto.TrajetRequestDTO;
 import com.exemple.maroute.dto.TrajetResponseDTO;
 import com.exemple.maroute.entity.Conducteur;
+import com.exemple.maroute.entity.PointArret;
 import com.exemple.maroute.entity.Trajet;
 import com.exemple.maroute.entity.Vehicule;
+import com.exemple.maroute.enums.StatutTrajet;
 import com.exemple.maroute.exception.ForbiddenException;
 import com.exemple.maroute.exception.InvalidRequestException;
 import com.exemple.maroute.exception.ResourceNotFoundException;
@@ -21,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
@@ -65,12 +68,38 @@ public class TrajetServiceImpl implements TrajetService {
             throw new ForbiddenException("ce véhicule appartient à un autre conducteur");
         }
 
-        if (request.placesProposees() > vehicule.getCapacite()){
-
+        if (request.placesProposees() > vehicule.getCapacite()) {
+            throw refus("le nombre de places proposées ne peut pas dépasser la capacité du véhicule ("
+                    + vehicule.getCapacite() + ")");
         }
 
         List<PointArretRequestDTO> points = request.pointsArret();
+        verifierParcours(points);
 
+        Trajet trajet = new Trajet();
+        trajet.setConducteur(conducteur);
+        trajet.setVehicule(vehicule);
+        trajet.setPlacesProposees(request.placesProposees());
+        trajet.setStatut(StatutTrajet.PUBLIE);
+        trajet.setVilleDepart(points.get(0).ville().trim());
+        trajet.setVilleArrivee(points.get(points.size() - 1).ville().trim());
+        trajet.setDateDepart(points.get(0).heurePassage());
+
+        for (int i = 0; i < points.size(); i++) {
+            PointArretRequestDTO p = points.get(i);
+            trajet.ajouterPointArret(new PointArret(
+                    p.ville().trim(),
+                    i,
+                    p.heurePassage(),
+                    p.prixDepuisDepart().setScale(2, RoundingMode.HALF_UP)));
+        }
+
+        Trajet trajetEnregistre = trajetRepository.save(trajet);
+        log.info("trajet {} publié par le conducteur {} ({} -> {})",
+                trajetEnregistre.getId(), conducteur.getId(),
+                trajetEnregistre.getVilleDepart(), trajetEnregistre.getVilleArrivee());
+
+        return trajetMapper.toResponseDTO(trajetEnregistre, calculerPlacesRestantes(trajetEnregistre));
     }
 
     private void verifierParcours(List<PointArretRequestDTO> points){
