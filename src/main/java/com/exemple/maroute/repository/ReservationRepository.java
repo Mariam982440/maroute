@@ -6,6 +6,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+
+
 import java.util.List;
 
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
@@ -23,5 +25,14 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             Long PassagerId,
             Long TrajetId,
             StatutReservation statut);
+
+    @Query("""
+            select r from Reservation r
+                       join fetch r.pointMontee
+                       join fetch r.pointDescente
+                       where r.passager.id = :passagerId
+                      order by r.dateReservation desc """)
+    List<Reservation> findHistoriqueByPassagerId(@Param("passagerId") Long passagerId);
+
 
 }

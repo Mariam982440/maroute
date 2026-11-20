@@ -39,7 +39,7 @@ public class Trajet {
     @Column(nullable = false, length = 20)
     private StatutTrajet statut;
 
-    // composition : les points d'arrêt n'existent pas sans leur trajet
+
     @OneToMany(mappedBy = "trajet", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("ordre ASC")
     private List<PointArret> pointsArret = new ArrayList<>();
