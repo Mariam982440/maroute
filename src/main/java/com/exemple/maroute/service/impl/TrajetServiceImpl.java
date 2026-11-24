@@ -1,22 +1,24 @@
 package com.exemple.maroute.service.impl;
 
 
-import com.exemple.maroute.dto.PointArretRequestDTO;
-import com.exemple.maroute.dto.TrajetRequestDTO;
-import com.exemple.maroute.dto.TrajetResponseDTO;
-import com.exemple.maroute.entity.Conducteur;
-import com.exemple.maroute.entity.PointArret;
-import com.exemple.maroute.entity.Trajet;
-import com.exemple.maroute.entity.Vehicule;
+import com.exemple.maroute.dto.*;
+import com.exemple.maroute.entity.*;
+import com.exemple.maroute.enums.StatutReservation;
 import com.exemple.maroute.enums.StatutTrajet;
+import com.exemple.maroute.exception.BusinessException;
 import com.exemple.maroute.exception.ForbiddenException;
 import com.exemple.maroute.exception.InvalidRequestException;
 import com.exemple.maroute.exception.ResourceNotFoundException;
 import com.exemple.maroute.mapper.TrajetMapper;
 import com.exemple.maroute.repository.ConducteurRepository;
+import com.exemple.maroute.repository.ReservationRepository;
 import com.exemple.maroute.repository.TrajetRepository;
 import com.exemple.maroute.repository.VehiculeRepository;
 import com.exemple.maroute.service.TrajetService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
@@ -24,7 +26,9 @@ import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -35,20 +39,25 @@ public class TrajetServiceImpl implements TrajetService {
 
     private static final Logger log = LoggerFactory.getLogger(TrajetServiceImpl.class);
 
+    private static final BigDecimal PRIX_MAX_ILLIMITE = new BigDecimal("99999999.99");
+
     private final TrajetRepository trajetRepository;
     private final ConducteurRepository conducteurRepository;
     private final VehiculeRepository vehiculeRepository;
     private final TrajetMapper trajetMapper;
+    private final ReservationRepository reservationRepository;
 
     public TrajetServiceImpl(
             TrajetRepository trajetRepository,
             ConducteurRepository conducteurRepository,
             VehiculeRepository vehiculeRepository,
-            TrajetMapper trajetMapper) {
+            TrajetMapper trajetMapper,
+            ReservationRepository reservationRepository) {
         this.trajetRepository = trajetRepository;
         this.conducteurRepository = conducteurRepository;
         this.vehiculeRepository = vehiculeRepository;
         this.trajetMapper = trajetMapper;
+        this.reservationRepository = reservationRepository;
     }
 
     @Override
@@ -106,7 +115,8 @@ public class TrajetServiceImpl implements TrajetService {
     public TrajetResponseDTO consulterTrajet(Long idTrajet){
 
         Trajet trajet = trajetRepository.findDetailById(idTrajet)
-                .orElseThrow(()->new ResourceNotFoundException("trajet introuvable avec l'id : "+idTrajet));
+                .orElseThrow(
+                        ()->new ResourceNotFoundException("trajet introuvable avec l'id : "+idTrajet));
 
         return trajetMapper.toResponseDTO(trajet,calculerPlacesRestantes(trajet));
     }
@@ -142,6 +152,120 @@ public class TrajetServiceImpl implements TrajetService {
 
     }
 
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponseDTO<TrajetRechercheDTO> rechercherTrajets(
+            String villeDepart, String villeArrivee, LocalDate date,
+            Integer nombrePlaces, BigDecimal prixMax, int page, int size) {
+
+        if (villeDepart.isBlank() || villeArrivee.isBlank()) {
+            throw refusRecherche("les villes de départ et d'arrivée sont obligatoires");
+        }
+        if (villeDepart.trim().equalsIgnoreCase(villeArrivee.trim())) {
+            throw refusRecherche("les villes de départ et d'arrivée doivent être différentes");
+        }
+        if (nombrePlaces != null && nombrePlaces < 1) {
+            throw refusRecherche("le nombre de places doit être au moins 1");
+        }
+        if (prixMax != null && prixMax.signum() < 0) {
+            throw refusRecherche("le prix maximal ne peut pas être négatif");
+        }
+        if (page < 0) {
+            throw refusRecherche("le numéro de page ne peut pas être négatif");
+        }
+        if (size < 1 || size > 50) {
+            throw refusRecherche("la taille de page doit être comprise entre 1 et 50");
+        }
+
+        int placesDemandees = (nombrePlaces == null) ? 1 : nombrePlaces;
+        BigDecimal prixMaxEffectif = (prixMax == null) ? PRIX_MAX_ILLIMITE : prixMax;
+
+        Page<TrajetRechercheDTO> resultat = trajetRepository.rechercher(
+                villeDepart.trim(),
+                villeArrivee.trim(),
+                date.atStartOfDay(),
+                date.plusDays(1).atStartOfDay(),
+                prixMaxEffectif,
+                placesDemandees,
+                StatutTrajet.PUBLIE,
+                StatutReservation.CONFIRMEE,
+                PageRequest.of(page, size));
+
+        log.info("recherche {} -> {} le {} : {} résultat(s)",
+                villeDepart.trim(), villeArrivee.trim(), date, resultat.getTotalElements());
+
+        return PageResponseDTO.of(resultat);
+    }
+
+
+    @Override
+    public void terminerTrajet(Long trajetId, Long conducteurId) {
+
+        Trajet trajet = chargerTrajetDuConducteur(trajetId, conducteurId);
+
+        verifierTrajetModifiable(trajet);
+
+        if (LocalDateTime.now().isBefore(trajet.getDateDepart())) {
+            throw conflit("le trajet ne peut être terminé qu'après son heure de départ ("
+                    + trajet.getDateDepart() + ")");
+        }
+
+        trajet.setStatut(StatutTrajet.TERMINE);
+        log.info("trajet {} terminé par le conducteur {}", trajetId, conducteurId);
+    }
+
+
+    @Override
+    public void annulerTrajet(Long trajetId, Long conducteurId) {
+
+        Trajet trajet = chargerTrajetDuConducteur(trajetId, conducteurId);
+
+        verifierTrajetModifiable(trajet);
+
+        List<Reservation> confirmees = reservationRepository
+                .findByTrajetIdAndStatut(trajetId, StatutReservation.CONFIRMEE);
+        confirmees.forEach(r -> r.setStatut(StatutReservation.ANNULEE));
+
+        trajet.setStatut(StatutTrajet.ANNULE);
+        log.info("trajet {} annulé par le conducteur {} ({} réservation(s) annulée(s))",
+                trajetId, conducteurId, confirmees.size());
+    }
+
+
+    private Trajet chargerTrajetDuConducteur(Long trajetId, Long conducteurId) {
+
+        Trajet trajet = trajetRepository.findByIdForUpdate(trajetId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "trajet introuvable avec l'id " + trajetId));
+
+        if (!trajet.getConducteur().getId().equals(conducteurId)) {
+            log.warn("action refusée : le trajet {} n'appartient pas au conducteur {}",
+                    trajetId, conducteurId);
+            throw new ForbiddenException("ce trajet appartient à un autre conducteur");
+        }
+        return trajet;
+    }
+
+    private InvalidRequestException refusRecherche(String message) {
+        log.warn("recherche refusée : {}", message);
+        return new InvalidRequestException(message);
+    }
+
+
+    private void verifierTrajetModifiable(Trajet trajet) {
+        if (trajet.getStatut() == StatutTrajet.TERMINE || trajet.getStatut() == StatutTrajet.ANNULE) {
+            throw conflit("le trajet est déjà " + trajet.getStatut()
+                    + " : aucune modification n'est possible");
+        }
+    }
+
+    private BusinessException conflit(String message) {
+        log.warn("opération refusée : {}", message);
+        return new BusinessException(message);
+    }
+
+
     private int calculerPlacesRestantes(Trajet trajet) {
         return trajet.getPlacesProposees();
     }
@@ -150,5 +274,9 @@ public class TrajetServiceImpl implements TrajetService {
         log.warn("publication refusée: {}",message);
         throw new InvalidRequestException(message);
     }
+
+
+
+   
 
 }

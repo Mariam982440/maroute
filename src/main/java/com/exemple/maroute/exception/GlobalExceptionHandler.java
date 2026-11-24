@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -59,6 +60,15 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleInvalidRequest(InvalidRequestException ex,
                                               HttpServletRequest request) {
         return build(HttpStatus.BAD_REQUEST, "Requête invalide", ex.getMessage(), request);
+    }
+
+    // 400 : paramètre obligatoire absent (ex : ?villeDepart manquant)
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ProblemDetail handleMissingParam(MissingServletRequestParameterException ex,
+                                            HttpServletRequest request) {
+        log.warn("Paramètre manquant '{}' sur {}", ex.getParameterName(), request.getRequestURI());
+        return build(HttpStatus.BAD_REQUEST, "Paramètre manquant",
+                "Le paramètre '" + ex.getParameterName() + "' est obligatoire", request);
     }
 
     // 403
